@@ -3,7 +3,8 @@ import platform
 import time
 import socket
 from Modules.logger import log_error, log_info, log_warning
-
+from stem import Signal
+from stem.control import Controller
 
 # ---------- Cores ----------
 RED, GREEN, YELLOW, DEFAULT = '\033[1;31m', '\033[1;92m', '\033[1;33m', '\033[0m'
@@ -17,6 +18,10 @@ def log_warning(message):
 
 def log_error(message):
     print(f"{RED}[!]{DEFAULT} {message}")
+
+
+TOR_CONTROL_PORT = 9050
+
 
 # ---------- Tor ----------
 def install_tor():
@@ -42,30 +47,28 @@ def install_tor():
             log_error(f"Failed to install Tor: {e}")
             return False
 
-def wait_for_tor(port=9050, timeout=30):
+def wait_for_tor(port=9050, timeout=10):
     start = time.time()
     while time.time() - start < timeout:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect(('127.0.0.1', port))
             s.close()
-            log_info("Tor is running and ready")
+            log_info("Tor SOCKS is running")
             return True
         except:
             time.sleep(1)
-    log_error("Tor did not start in time")
+    log_error("Tor SOCKS not running")
     return False
 
-def restart_tor_service():
-    system = platform.system()
+def restart_tor_service(port=TOR_CONTROL_PORT, wait=5):
     try:
-        if system in ["Linux", "Darwin"]:
-            subprocess.run(
-                ['sudo', 'systemctl', 'restart', 'tor'],
-                check=True,
-                stdout=subprocess.DEVNULL,  # <- suprime saída
-                stderr=subprocess.DEVNULL
-            )
-        log_info("Tor service restarted")  # ainda podemos logar, mas no painel
+        with Controller.from_port(port=TOR_CONTROL_PORT) as controller:
+            controller.authenticate()  # autenticação via cookie ou password
+            controller.signal(Signal.NEWNYM)
+            log_info("Requested new Tor identity (NEWNYM)")
+            time.sleep(wait)  # dá tempo para o Tor atribuir novo IP
+            return True
     except Exception as e:
-        log_error(f"Failed to restart Tor: {e}")
+        log_error(f"Failed to request NEWNYM: {e}")
+        return False
