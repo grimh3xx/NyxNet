@@ -9,6 +9,8 @@ from Modules.tor_manager import install_tor, wait_for_tor, restart_tor_service
 from Modules.ip_manager import get_real_ip, get_tor_ip
 from Modules.logger import log_info, log_error, log_warning
 from Modules.utils import clear_screen, check_root
+from stem import Signal
+from stem.control import Controller
 
 console = Console()
 
@@ -17,16 +19,32 @@ RED, GREEN, YELLOW, BLUE, DEFAULT = '\033[1;31m', '\033[1;92m', '\033[1;33m', '\
 
 # ---------- Banner ----------
 def display_banner():
-    banner = f"""
-{GREEN}███╗   ██╗██╗   ██╗██╗  ██╗███╗   ██╗███████╗████████╗
+    banner_text = """
+███╗   ██╗██╗   ██╗██╗  ██╗███╗   ██╗███████╗████████╗
 ████╗  ██║╚██╗ ██╔╝╚██╗██╔╝████╗  ██║██╔════╝╚══██╔══╝
 ██╔██╗ ██║ ╚████╔╝  ╚███╔╝ ██╔██╗ ██║█████╗     ██║   
 ██║╚██╗██║  ╚██╔╝   ██╔██╗ ██║╚██╗██║██╔══╝     ██║   
 ██║ ╚████║   ██║   ██╔╝ ██╗██║ ╚████║███████╗   ██║   
-╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝{DEFAULT}
-
-{BLUE}Version: 1.0   Author: 0xBl4ckn3t   Project: NyxNet{DEFAULT}
+╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝
+Version: 1.0   Author: 0xBl4ckn3t   Project: NyxNet
 """
+    panel = Panel(banner_text, title="NyxNet 🌐🕵️‍♂️", border_style="blue", expand=False)
+    console.print(panel)
+    
+# ---------- Tor NEWNYM ----------
+TOR_CONTROL_PORT = 9051
+def restart_tor_service(wait=5):
+    try:
+        with Controller.from_port(port=TOR_CONTROL_PORT) as controller:
+            controller.authenticate()
+            controller.signal(Signal.NEWNYM)
+            log_info("Requested new Tor identity (NEWNYM)")
+            time.sleep(wait)  # espera o Tor mudar o IP
+            return True
+    except Exception as e:
+        log_error(f"Failed to request NEWNYM: {e}")
+        return False
+
 
 # ---------- Config ----------
 with open("config.yaml") as f:
@@ -41,7 +59,7 @@ def main():
     if os.geteuid() != 0:
         console.print("[!] This script must be run as root.", style="bold red")
         return
-
+    
     clear_screen()
     console.print(display_banner())
 
@@ -50,39 +68,39 @@ def main():
         return
     if not wait_for_tor():
         return
-
-    # ---------- Input Interativo ----------
+    # ---------- Config ----------
     try:
-        interval_input = input(f"{GREEN}[>] Interval to change IP in seconds (default 5, min 1): {DEFAULT}")
-        interval = int(interval_input) if interval_input else 3
+        interval = int(input(f"{GREEN}[>] Interval to change IP (Interval, default 3): {DEFAULT}") or 3)
         if interval < 1:
             interval = 1
     except ValueError:
         interval = 3
-
     try:
-        max_changes_input = input(f"{GREEN}[>] Max Changes (-1 for infinite, default -1): {DEFAULT}")
-        max_changes = int(max_changes_input) if max_changes_input else -1
+        max_changes = int(input(f"{GREEN}[>] Max changes (-1 infinite, default -1): {DEFAULT}") or -1)
     except ValueError:
         max_changes = -1
 
+    real_ip = get_real_ip()
+    tor_ip = get_tor_ip()
     change_count = 0
 
     # ---------- Live painel ----------
     with Live(refresh_per_second=2, screen=True) as live:
         while max_changes == -1 or change_count < max_changes:
-            real_ip = get_real_ip()
-            tor_ip = get_tor_ip(rotate_user_agent=ROTATE_UA)
-
+            if restart_tor_service():
+                for _ in range(10):
+                    new_tor_ip = get_tor_ip()
+                    if new_tor_ip != tor_ip and new_tor_ip is not None:
+                        tor_ip = new_tor_ip
+                        break
+                    time.sleep(0.5)
+            
             # Cria tabela de IPs
             table = Table(title="🌐 IP Status", title_style="bold blue", show_lines=True)
             table.add_column("Type", justify="center", style="bold cyan")
             table.add_column("IP Address", justify="center", style="bold green")
             table.add_row("Real IP 🌍", real_ip)
-            if tor_ip:
-                table.add_row("Tor IP 🕵️‍♂️", tor_ip)
-            else:
-                table.add_row("Tor IP 🕵️‍♂️", "[bold red]Failed[/bold red]")
+            table.add_row("Tor IP 🕵️‍♂️", tor_ip if tor_ip else "[bold red]Failed[/bold red]")
 
             # Painel centralizado
             panel = Panel(
