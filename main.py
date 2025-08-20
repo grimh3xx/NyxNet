@@ -1,128 +1,76 @@
-#!/usr/bin/env python3
-import os, time, yaml, platform, subprocess, random, socket
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.live import Live
-from rich.align import Align
-from Modules.tor_manager import install_tor, wait_for_tor, restart_tor_service
-from Modules.ip_manager import get_real_ip, get_tor_ip
-from Modules.logger import log_info, log_error, log_warning
-from Modules.utils import clear_screen, check_root
+import subprocess
+import platform
+import time
+import socket
+from Modules.logger import log_error, log_info, log_warning
 from stem import Signal
 from stem.control import Controller
-
-console = Console()
+import time
 
 # ---------- Cores ----------
-RED, GREEN, YELLOW, BLUE, DEFAULT = '\033[1;31m', '\033[1;92m', '\033[1;33m', '\033[1;34m', '\033[0m'
+RED, GREEN, YELLOW, DEFAULT = '\033[1;31m', '\033[1;92m', '\033[1;33m', '\033[0m'
 
-# ---------- Banner ----------
-def display_banner():
-    banner_text = """
-███╗   ██╗██╗   ██╗██╗  ██╗███╗   ██╗███████╗████████╗
-████╗  ██║╚██╗ ██╔╝╚██╗██╔╝████╗  ██║██╔════╝╚══██╔══╝
-██╔██╗ ██║ ╚████╔╝  ╚███╔╝ ██╔██╗ ██║█████╗     ██║   
-██║╚██╗██║  ╚██╔╝   ██╔██╗ ██║╚██╗██║██╔══╝     ██║   
-██║ ╚████║   ██║   ██╔╝ ██╗██║ ╚████║███████╗   ██║   
-╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝
-Version: 1.0   Author: 0xBl4ckn3t   Project: NyxNet
-"""
-    panel = Panel(banner_text, title="NyxNet 🌐🕵️‍♂️", border_style="blue", expand=False)
-    console.print(panel)
-    
-# ---------- Tor NEWNYM ----------
+# ---------- Logs ----------
+def log_info(message):
+    print(f"{GREEN}[*]{DEFAULT} {message}")
+
+def log_warning(message):
+    print(f"{YELLOW}[!]{DEFAULT} {message}")
+
+def log_error(message):
+    print(f"{RED}[!]{DEFAULT} {message}")
+
+
 TOR_CONTROL_PORT = 9051
-TOR_SOCKS_PORT = 9050
+WAIT = 5
 
-def restart_tor_service(wait=2):
+
+# ---------- Tor ----------
+def install_tor():
+    system = platform.system()
+    try:
+        subprocess.run(['which', 'tor'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        log_info("Tor is already installed")
+        return True
+    except subprocess.CalledProcessError:
+        log_warning("Tor not found. Installing...")
+        try:
+            if system == "Linux":
+                subprocess.run(['sudo', 'apt', 'update'], check=True)
+                subprocess.run(['sudo', 'apt', 'install', '-y', 'tor'], check=True)
+            elif system == "Darwin":  # MacOS
+                subprocess.run(['brew', 'install', 'tor'], check=True)
+            elif system == "Windows":
+                log_error("Automatic installation not supported on Windows. Install Tor manually.")
+                return False
+            log_info("Tor installed successfully")
+            return True
+        except Exception as e:
+            log_error(f"Failed to install Tor: {e}")
+            return False
+
+def wait_for_tor(port=9050, timeout=10):
+    start = time.time()
+    while time.time() - start < timeout:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect(('127.0.0.1', port))
+            s.close()
+            log_info("Tor SOCKS is running")
+            return True
+        except:
+            time.sleep(1)
+    log_error("Tor SOCKS not running")
+    return False
+
+def restart_tor_service():
     try:
         with Controller.from_port(port=TOR_CONTROL_PORT) as controller:
-            controller.authenticate()
+            controller.authenticate()  # autenticação via cookie ou password
             controller.signal(Signal.NEWNYM)
             log_info("Requested new Tor identity (NEWNYM)")
-            time.sleep(wait)  # espera o Tor mudar o IP
+            time.sleep(WAIT)  # dá tempo para o Tor atribuir novo IP
             return True
     except Exception as e:
-        if "SocketClosed" not in str(e):
-            log_warning(f"Failed to request NEWNYM: {e}")
+        log_error(f"Failed to request NEWNYM: {e}")
         return False
-
-
-# ---------- Config ----------
-with open("config.yaml") as f:
-    config = yaml.safe_load(f)
-
-INTERVAL = config.get("interval", 3)        # mais rápido
-MAX_CHANGES = config.get("max_changes", -1)
-ROTATE_UA = config.get("rotate_user_agent", True)
-
-# ---------- Main ----------
-def main():
-    if os.geteuid() != 0:
-        console.print("[!] This script must be run as root.", style="bold red")
-        return
-    
-    clear_screen()
-    console.print(display_banner())
-
-
-    # Instala e verifica Tor
-    if not install_tor():
-        return
-    if not wait_for_tor():
-        return
-
-    real_ip = get_real_ip()
-    tor_ip = get_tor_ip()
-    change_count = 0
-
-    # ---------- Config ----------
-    try:
-        interval = int(input(f"{GREEN}[>] Interval to change IP (Interval, default 3): {DEFAULT}") or 3)
-        if interval < 1:
-            interval = 1
-    except ValueError:
-        interval = 3
-    try:
-        MAX_CHANGES = int(input(f"{GREEN}[>] Max changes (-1 infinite, default -1): {DEFAULT}") or -1)
-    except ValueError:
-        MAX_CHANGES = -1
-
-    # ---------- Live painel ----------
-    with Live(refresh_per_second=4, screen=True) as live:
-        while MAX_CHANGES == -1 or change_count < MAX_CHANGES:
-            if restart_tor_service(wait=2):
-                for _ in range(10):
-                    new_tor_ip = get_tor_ip(rotate_user_agent=ROTATE_UA)
-                    if new_tor_ip != tor_ip and new_tor_ip is not None:
-                        tor_ip = new_tor_ip
-                        break
-                    time.sleep(0.5)
-            
-            # Cria tabela de IPs
-            table = Table(title="🌐 IP Status", title_style="bold blue", show_lines=True)
-            table.add_column("Type", justify="center", style="bold cyan")
-            table.add_column("IP Address", justify="center", style="bold green")
-            table.add_row("Real IP 🌍", real_ip)
-            table.add_row("Tor IP 🕵️‍♂️", tor_ip if tor_ip else "[bold red]Failed[/bold red]")
-
-            # Painel centralizado
-            panel = Panel(
-                Align.center(table),
-                title="NyxNet IP Tracker",
-                border_style="bold magenta",
-                padding=(1, 2),
-                subtitle=f"Changes: {change_count} | Interval: {interval}s"
-            )
-
-            live.update(Align.center(panel))
-
-            # Incrementa contador e reinicia Tor silenciosamente
-            change_count += 1
-            time.sleep(interval)
-
-if __name__ == "__main__":
-    main()
-
-
