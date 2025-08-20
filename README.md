@@ -59,7 +59,7 @@
 **Exemplo de saída:**
 
 ```bash
-╭─────── NyxNet IP Tracker ────────╮
+╭─────── NyxNet IP Changer ────────╮
 │                                  │
 │           🌐 IP Status           │
 │  ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓  │
