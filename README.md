@@ -46,6 +46,7 @@
 **Você deve ver algo como:**
 ```bash
 [*] 127.0.0.1:9050  (SOCKS)
+
 [*] 127.0.0.1:9051  (ControlPort)
 ```
 ▶️ **Execução**
