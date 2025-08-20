@@ -1,6 +1,6 @@
 🌐 **NyxNet - Auto Changer IP with Proxy**
 
-This script is professional and fast IP, which shows your Real IP and Tor IP in real time, with automatic identity exchange using 
+**[!] This script is professional and fast IP, which shows your Real IP and Tor IP in real time, with automatic identity exchange using**
 
 🚀 **Funcionalidades**
 
@@ -19,41 +19,41 @@ This script is professional and fast IP, which shows your Real IP and Tor IP in 
 | **Dependências Python listadas em requirements.txt:**
 
 ```bash
-| [*] pip install -r requirements.txt
+[*] pip install -r requirements.txt
 ```
 🔧 **Configuração do Tor**
 
 **Edite o arquivo de configuração do Tor (torrc) para habilitar o ControlPort**
 **No Linux:**
 ```bash
-| [*] sudo nano /etc/tor/torrc
+[*] sudo nano /etc/tor/torrc
 ```
 **Descomente (ou adicione):**
 ```bash
-| [*] ControlPort 9051
+[*] ControlPort 9051
 
-| [*] CookieAuthentication 1
+[*] CookieAuthentication 1
 ```
 **Reinicie o Tor:**
 ```bash
-| [*] sudo systemctl restart tor
+[*] sudo systemctl restart tor
 ```
 
 **Verifique se está rodando:**
 ```bash
-| [*] netstat -tulnp | grep tor
+[*] netstat -tulnp | grep tor
 ```
 **Você deve ver algo como:**
 ```bash
-| [*] 127.0.0.1:9050  (SOCKS)
-| [*] 127.0.0.1:9051  (ControlPort)
+[*] 127.0.0.1:9050  (SOCKS)
+[*] 127.0.0.1:9051  (ControlPort)
 ```
 ▶️ **Execução**
 
 **Execute o programa como root:**
 
 ```bash
-| [*] sudo python3 main.py
+[*] sudo python3 main.py
 ```
 **Exemplo de saída:**
 
@@ -84,13 +84,13 @@ This script is professional and fast IP, which shows your Real IP and Tor IP in 
 
 **🛠️ Tecnologias**
 
-**Python 🐍**
+**[*] Python 🐍**
 
-**Stem** 🕵️‍♂️
+**[*] Stem** 🕵️‍♂️
 
-**Rich 🎨**
+**[*] Rich 🎨**
 
-**https://www.torproject.org/ 🌐**
+**[*] Tor🌐**
 
 ## 🚀 Instalação
 Clone o repositório e instale as dependências:  
