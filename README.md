@@ -92,6 +92,14 @@
 
 **[*] Tor🌐**
 
+**📜 Aviso Legal**
+Este projeto é para uso educacional e pesquisa.⚠️ Não utilize para atividades ilegais. O autor não se responsabiliza pelo mau uso.
+
+**👤 Autor**
+Feito com ⚡ por 0xBl4ckn3t
+
+
+
 ## 🚀 Instalação
 Clone o repositório e instale as dependências:  
 
