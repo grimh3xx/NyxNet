@@ -1,23 +1,26 @@
-# 🌐 NyxNet  
+🌐 **NyxNet - Auto Changer IP with Proxy**
 
-NyxNet é uma ferramenta em Python para **gerenciamento e monitoramento de IPs via Tor**, projetada para quem busca **privacidade, anonimato e controle avançado de rede** diretamente no terminal.  
+This script is professional and fast IP, which shows your Real IP and Tor IP in real time, with automatic identity exchange using 
 
----
+🚀 **Funcionalidades**
 
-## ✨ Recursos
-- 🔍 Exibe **IP Real** e **IP Tor** em tempo real  
-- 🔄 Troca de identidade (IP) via **Tor NEWNYM signal**  
-- 🎨 Interface de terminal interativa e moderna com [Rich](https://github.com/Textualize/rich)  
-- ⚙️ Configuração dinâmica de **intervalo** e **número máximo de trocas**  
-- 📡 Integração automática com o serviço **Tor**  
+✔️ **Exibe IP Real (sem Tor).**
+✔️ **Exibe IP via Tor (SOCKS5).**
+✔️ **Troca de identidade automática (NEWNYM) via Tor ControlPort.**
+✔️ **Atualização rápida e em tempo real (1s).**
+✔️ **Interface colorida e responsiva com Rich.**
+✔️ **Configuração simples e documentação completa.**
 
----
+⚙️ **Requisitos**
 
-## 📦 Pré-requisitos
-Antes de instalar, certifique-se de ter:  
-- **Python 3.8+**  
-- **Tor** instalado e rodando na porta de controle `9051`  
-- Acesso root (`sudo`) para enviar comandos de controle ao Tor  
+**Python 3.8+**
+
+| **Tor instalado e rodando no sistema**
+
+| **Dependências Python listadas em requirements.txt:**
+
+| **pip install -r requirements.txt**
+
 
 ---
 
