@@ -25,6 +25,6 @@ Antes de instalar, certifique-se de ter:
 Clone o repositório e instale as dependências:  
 
 ```bash
-git clone https://github.com/SEU_USUARIO/NyxNet.git
+git clone https://github.com/0xBl4ckn3t/NyxNet.git
 cd NyxNet
 pip install -r requirements.txt
