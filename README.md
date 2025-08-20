@@ -72,6 +72,15 @@
 ╰─── Trocas: 12 | Intervalo: 1s ───╯
 ```
 
+## 🚀 Instalação
+Clone o repositório e instale as dependências:  
+
+```bash
+git clone https://github.com/0xBl4ckn3t/NyxNet.git
+cd NyxNet
+pip install -r requirements.txt
+```
+
 ⚡ **Ajustes**
 
 **Intervalo entre trocas de IP: padrão 1 segundo (alterável em main.py).**
@@ -99,11 +108,3 @@ Este projeto é para uso educacional e pesquisa.⚠️ Não utilize para ativida
 Feito com ⚡ por 0xBl4ckn3t
 
 
-
-## 🚀 Instalação
-Clone o repositório e instale as dependências:  
-
-```bash
-git clone https://github.com/0xBl4ckn3t/NyxNet.git
-cd NyxNet
-pip install -r requirements.txt
