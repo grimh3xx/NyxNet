@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, time, yaml, platform, subprocess
+import os, time, yaml, platform, subprocess, random, socket
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -33,7 +33,9 @@ Version: 1.0   Author: 0xBl4ckn3t   Project: NyxNet
     
 # ---------- Tor NEWNYM ----------
 TOR_CONTROL_PORT = 9051
-def restart_tor_service(wait=5):
+TOR_SOCKS_PORT = 9050
+
+def restart_tor_service(wait=2):
     try:
         with Controller.from_port(port=TOR_CONTROL_PORT) as controller:
             controller.authenticate()
@@ -42,7 +44,8 @@ def restart_tor_service(wait=5):
             time.sleep(wait)  # espera o Tor mudar o IP
             return True
     except Exception as e:
-        log_error(f"Failed to request NEWNYM: {e}")
+        if "SocketClosed" not in str(e):
+            log_warning(f"Failed to request NEWNYM: {e}")
         return False
 
 
@@ -50,7 +53,7 @@ def restart_tor_service(wait=5):
 with open("config.yaml") as f:
     config = yaml.safe_load(f)
 
-INTERVAL = config.get("interval", 5)        # mais rápido
+INTERVAL = config.get("interval", 3)        # mais rápido
 MAX_CHANGES = config.get("max_changes", -1)
 ROTATE_UA = config.get("rotate_user_agent", True)
 
@@ -63,11 +66,17 @@ def main():
     clear_screen()
     console.print(display_banner())
 
+
     # Instala e verifica Tor
     if not install_tor():
         return
     if not wait_for_tor():
         return
+
+    real_ip = get_real_ip()
+    tor_ip = get_tor_ip()
+    change_count = 0
+
     # ---------- Config ----------
     try:
         interval = int(input(f"{GREEN}[>] Interval to change IP (Interval, default 3): {DEFAULT}") or 3)
@@ -76,20 +85,16 @@ def main():
     except ValueError:
         interval = 3
     try:
-        max_changes = int(input(f"{GREEN}[>] Max changes (-1 infinite, default -1): {DEFAULT}") or -1)
+        MAX_CHANGES = int(input(f"{GREEN}[>] Max changes (-1 infinite, default -1): {DEFAULT}") or -1)
     except ValueError:
-        max_changes = -1
-
-    real_ip = get_real_ip()
-    tor_ip = get_tor_ip()
-    change_count = 0
+        MAX_CHANGES = -1
 
     # ---------- Live painel ----------
-    with Live(refresh_per_second=2, screen=True) as live:
-        while max_changes == -1 or change_count < max_changes:
-            if restart_tor_service():
+    with Live(refresh_per_second=4, screen=True) as live:
+        while MAX_CHANGES == -1 or change_count < MAX_CHANGES:
+            if restart_tor_service(wait=2):
                 for _ in range(10):
-                    new_tor_ip = get_tor_ip()
+                    new_tor_ip = get_tor_ip(rotate_user_agent=ROTATE_UA)
                     if new_tor_ip != tor_ip and new_tor_ip is not None:
                         tor_ip = new_tor_ip
                         break
@@ -116,7 +121,6 @@ def main():
             # Incrementa contador e reinicia Tor silenciosamente
             change_count += 1
             time.sleep(interval)
-            restart_tor_service()  # sem print extra no terminal
 
 if __name__ == "__main__":
     main()
