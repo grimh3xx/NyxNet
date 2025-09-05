@@ -3,6 +3,9 @@ import time
 import socket
 import random
 from Modules.logger import log_info, log_error, log_warning
+import os
+from stem import Signal
+from stem.control import Controller
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64)...",
@@ -62,3 +65,45 @@ def get_tor_ip(tor_port=TOR_SOCKS_PORT, rotate_user_agent=True):
     except requests.RequestException as e:
         log_error(f"Failed to fetch Tor IP: {e}")
         return None
+
+def install_tor():
+    import shutil
+    from Modules.logger import log_info, log_error
+
+    if shutil.which("tor"):
+        log_info("Tor já está instalado.")
+        return True
+
+    try:
+        log_info("Instalando Tor...")
+        os.system("sudo pacman -S --noconfirm tor")  # ou seu gerenciador de pacotes
+        return True
+    except Exception as e:
+        log_error(f"Erro ao instalar o Tor: {e}")
+        return False
+
+
+def wait_for_tor(host="127.0.0.1", port=9050, timeout=20):
+    for _ in range(timeout):
+        try:
+            with socket.create_connection((host, port), timeout=2):
+                log_info("Tor SOCKS pronto!!!")
+                return True
+        except:
+            time.sleep(1)
+    log_error("Tor SOCKS nao respondeu !!! ")
+    return False
+
+def restart_tor_service(wait=2):
+    """Envia sinal NEWNYM para o Tor (trocar IP)."""
+    try:
+        with Controller.from_port(port=9051) as controller:
+            controller.authenticate()
+            controller.signal(Signal.NEWNYM)
+            log_info("Solicitada nova identidade Tor (NEWNYM)")
+            time.sleep(wait)  # espera o novo circuito
+            return True
+    except Exception as e:
+        if "SocketClosed" not in str(e):
+            log_error(f"Erro ao enviar NEWNYM: {e}")
+        return False
