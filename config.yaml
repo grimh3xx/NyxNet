@@ -1,4 +1,4 @@
-interval: 5
+interval: 7
 max_changes: -1
 mode: continuous
 verbose: True
