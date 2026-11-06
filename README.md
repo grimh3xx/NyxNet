@@ -1,111 +1,146 @@
-🌐 **NyxNet - Auto Changer IP with Proxy**
+<div align="center">
 
-**[!] This script is professional and fast IP, which shows your Real IP and Tor IP in real time, with automatic identity exchange using**
+<img src="docs/banner.svg" alt="NyxNet" width="100%">
 
-🚀 **Funcionalidades**
+**Tor identity rotator with a live circuit dashboard.**
+Requests a new Tor identity on a timer, verifies every exit with check.torproject.org
+and shows the full guard → middle → exit path, in real time.
 
-✔️ **Exibe IP Real (sem Tor).**
-✔️ **Exibe IP via Tor (SOCKS5).**
-✔️ **Troca de identidade automática (NEWNYM) via Tor ControlPort.**
-✔️ **Atualização rápida e em tempo real (1s).**
-✔️ **Interface colorida e responsiva com Rich.**
-✔️ **Configuração simples e documentação completa.**
+[![build](https://img.shields.io/github/actions/workflow/status/grimh3xx/NyxNet/build.yml?branch=main&style=flat-square&labelColor=111826&label=build)](https://github.com/grimh3xx/NyxNet/actions)
+[![release](https://img.shields.io/github/v/release/grimh3xx/NyxNet?style=flat-square&labelColor=111826&color=3B82F6)](https://github.com/grimh3xx/NyxNet/releases/latest)
+[![license](https://img.shields.io/github/license/grimh3xx/NyxNet?style=flat-square&labelColor=111826&color=22D3EE)](LICENSE)
+![python](https://img.shields.io/badge/python-3.9%2B-3B82F6?style=flat-square&labelColor=111826)
+![platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-22D3EE?style=flat-square&labelColor=111826)
 
+`CentralTech Solutions` · [centraltechpc.com](https://centraltechpc.com) · [github.com/grimh3xx](https://github.com/grimh3xx)
 
-⚙️ **Requisitos**
+</div>
 
-**Python 3.8+**
-| **Tor instalado e rodando no sistema**
-| **Dependências Python listadas em requirements.txt:**
+<p align="center"><img src="docs/demo.svg" alt="NyxNet demo" width="100%"></p>
 
-```bash
-[*] pip install -r requirements.txt
-```
-🔧 **Configuração do Tor**
+<p align="center"><sub>Recorded with <code>--demo</code>: simulated relays and documentation-range IPs (RFC 5737), no real traffic.</sub></p>
 
-**Edite o arquivo de configuração do Tor (torrc) para habilitar o ControlPort**
-**No Linux:**
-```bash
-[*] sudo nano /etc/tor/torrc
-```
-**Descomente (ou adicione):**
-```bash
-[*] ControlPort 9051
+## Features
 
-[*] CookieAuthentication 1
-```
-**Reinicie o Tor:**
-```bash
-[*] sudo systemctl restart tor
-```
+- **Zero setup.** If no Tor ControlPort is running, NyxNet starts its own private Tor instance
+  on random ports with a throwaway data directory. No root, no `torrc` edits, nothing left behind.
+- **Verified exits.** Every identity is checked through [check.torproject.org](https://check.torproject.org),
+  so the dashboard tells you when traffic is *not* going through Tor instead of assuming it is.
+- **Full circuit view.** Guard, middle and exit relays with nickname, country and address,
+  resolved from the exact circuit that carried the check.
+- **Respects Tor.** `NEWNYM` is rate-limited by Tor to about one every 10 seconds; NyxNet waits
+  for it instead of spamming signals that would be silently dropped.
+- **Session stats.** Unique exits, countries, average latency and re-used exits (`↺`).
+- **Script friendly.** `--plain` and `--json` print one line per identity; `--once` prints the
+  current exit and quits.
+- **Private by default.** Your real IP is only ever shown masked (`203.•••.•••.42`) and is never
+  written to disk. `--no-real-ip` skips the lookup entirely.
+- **Demo mode.** `--demo` runs the whole dashboard on a simulated network, without Tor.
 
-**Verifique se está rodando:**
-```bash
-[*] netstat -tulnp | grep tor
-```
-**Você deve ver algo como:**
-```bash
-[*] 127.0.0.1:9050  (SOCKS)
-
-[*] 127.0.0.1:9051  (ControlPort)
-```
-▶️ **Execução**
-
-**Execute o programa como root:**
+## Quick start
 
 ```bash
-[*] sudo python3 main.py
-```
-**Exemplo de saída:**
+# 1. Tor itself (only the binary is needed; NyxNet starts it for you)
+sudo pacman -S tor          # Arch
+sudo apt install tor        # Debian / Ubuntu / Kali
+brew install tor            # macOS
 
-```bash
-╭─────── NyxNet IP Changer ────────╮
-│                                  │
-│           🌐 IP Status           │
-│  ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓  │
-│  ┃    Tipo    ┃   Endereço    ┃  │
-│  ┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩  │
-│  │ Real IP 🌍 │ 127.0.0.1     │  │
-│  ├────────────┼───────────────┤  │
-│  │ Tor IP 🕵️‍♂️  │ 192.91.23.81  │  │
-│  └────────────┴───────────────┘  │
-│                                  │
-╰─── Trocas: 1  | Intervalo: 1s ───╯
+# 2. NyxNet
+pipx install git+https://github.com/grimh3xx/NyxNet
+nyxnet
 ```
 
-## 🚀 Instalação
-Clone o repositório e instale as dependências:  
+Or from a clone:
 
 ```bash
-git clone https://github.com/0xBl4ckn3t/NyxNet.git
-cd NyxNet
+git clone https://github.com/grimh3xx/NyxNet && cd NyxNet
 pip install -r requirements.txt
+python -m nyxnet --demo     # try it without Tor first
 ```
 
-⚡ **Ajustes**
+Keys: <kbd>n</kbd> new identity now · <kbd>p</kbd> pause · <kbd>q</kbd> quit.
 
-**Intervalo entre trocas de IP: padrão 1 segundo (alterável em main.py).**
+## Usage
 
-**Delay após NEWNYM: padrão 2 segundos, pode reduzir para trocas mais rápidas.**
+```text
+nyxnet [-i SEC] [-n N] [--once] [--plain | --json] [tor options] [--demo]
+```
 
-**Se o Tor estiver em outro host/porta, edite ```bash TOR_SOCKS_PORT``` e ```bash TOR_CONTROL_PORT``` no código.**
+| Option | Default | |
+|---|---|---|
+| `-i, --interval SEC` | `15` | Seconds between new identities (minimum 10, Tor's NEWNYM rate limit) |
+| `-n, --count N` | `0` | Stop after N identities (0 = until <kbd>q</kbd> / <kbd>Ctrl-C</kbd>) |
+| `--once` | | Print the current exit and quit |
+| `--plain` / `--json` | | One line / one JSON object per identity instead of the dashboard |
+| `--socks-port`, `--control-port` | `9050`, `9051` | Ports of an existing Tor |
+| `--password` | cookie auth | ControlPort password (or `NYXNET_TOR_PASSWORD`) |
+| `--launch auto\|always\|never` | `auto` | Start a private Tor only if none is reachable, always, or never |
+| `--tor-cmd PATH` | `tor` | Tor binary to launch |
+| `--no-real-ip` | | Never look up your real IP |
+| `--log FILE` / `--no-log` | `~/.local/state/nyxnet/history.jsonl` | Identity history (exit IP, country, circuit, latency) |
+| `--demo` | | Simulated network, no Tor needed |
 
----
+Examples:
 
-**🛠️ Tecnologias**
+```bash
+nyxnet -i 30                         # new identity every 30 s
+nyxnet --once                        # where am I exiting right now?
+nyxnet --json -n 10 > exits.jsonl    # 10 identities, machine-readable
+nyxnet --launch never                # only use the system Tor (fail if absent)
+```
 
-**[*] Python 🐍**
+## Using the rotating identity
 
-**[*] Stem** 🕵️‍♂️
+NyxNet changes the identity of the **Tor instance**; your applications must send their
+traffic through its SOCKS port (shown in the dashboard as `socks5`):
 
-**[*] Rich 🎨**
+```bash
+curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip
+proxychains4 -q nmap -sT -Pn example.com     # with socks5 127.0.0.1 9050 in proxychains.conf
+```
 
-**[*] Tor🌐**
+When NyxNet launches its own Tor the port is random, so either use the one on screen or run
+your system Tor (`sudo systemctl start tor`) and NyxNet will attach to it. For the system
+Tor, enable the ControlPort in `/etc/tor/torrc`:
 
-**📜 Aviso Legal:**
-Este projeto é para uso educacional e pesquisa.⚠️ Não utilize para atividades ilegais. O autor não se responsabiliza pelo mau uso.
+```text
+ControlPort 9051
+CookieAuthentication 1
+```
 
-**👤 Autor:**
-Feito com ⚡ por __0xBl4ckn3t__
+and make sure your user can read the cookie (on most distros: add yourself to the
+`tor` / `debian-tor` group).
 
+## How it works
 
+1. **Connect or launch.** [stem](https://stem.torproject.org) attaches to the ControlPort, or
+   starts `tor` with a temporary `DataDirectory`, random `SocksPort`/`ControlPort` and cookie auth.
+2. **Check.** A request to `check.torproject.org/api/ip` goes through the SOCKS port (`socks5h`,
+   so DNS is resolved by Tor too). A `STREAM` event listener follows that request to the circuit
+   that carried it, and the circuit's relays are looked up in the consensus and Tor's GeoIP database.
+3. **Rotate.** After the interval, `SIGNAL NEWNYM` marks existing circuits as dirty so new
+   connections get a fresh circuit, then the check repeats.
+
+## Limitations
+
+- Rotating identities is **not** extra anonymity. It changes which exit websites see, which is
+  useful for testing geo/IP-based behaviour and rate limits, but your guard stays the same by design.
+- Only traffic sent to Tor's SOCKS port is affected; NyxNet is not a system-wide VPN.
+- An exit can repeat (`↺ reused`): the network has a few thousand exits and Tor weighs them by bandwidth.
+
+## What changed in 2.0
+
+NyxNet was rewritten from scratch: package layout with a `nyxnet` command, private Tor
+launcher (no root, no auto-install through the package manager), exit verification,
+circuit inspection, NEWNYM rate-limit handling, masked real IP, `--plain`/`--json`/`--once`,
+demo mode, tests and CI.
+
+## Legal
+
+For privacy research, testing your own services and education. Respect the
+[Tor Project's guidance](https://support.torproject.org/abuse/) and the terms of the
+services you access. You are responsible for how you use this tool.
+
+## License
+
+[MIT](LICENSE) © grimh3xx · CentralTech

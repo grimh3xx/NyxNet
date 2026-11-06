@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nyxnet"
+dynamic = ["version"]
+description = "Tor identity rotator with a live circuit dashboard"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "grimh3xx" }]
+keywords = ["tor", "privacy", "anonymity", "newnym", "stem", "tui", "security"]
+dependencies = ["rich>=13", "stem>=1.8", "requests[socks]>=2.31"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: Internet :: Proxy Servers",
+]
+
+[project.urls]
+Homepage = "https://centraltechpc.com"
+Repository = "https://github.com/grimh3xx/NyxNet"
+
+[project.scripts]
+nyxnet = "nyxnet.cli:main"
+
+[tool.setuptools]
+packages = ["nyxnet"]
+
+[tool.setuptools.dynamic]
+version = { attr = "nyxnet.__version__" }

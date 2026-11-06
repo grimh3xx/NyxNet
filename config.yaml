@@ -1,6 +1,0 @@
-interval: 7
-max_changes: -1
-mode: continuous
-verbose: True
-tor_port: 9050
-rotate_user_agent: True

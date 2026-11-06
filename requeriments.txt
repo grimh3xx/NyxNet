@@ -1,4 +1,0 @@
-stem
-requests
-rich
-pyyaml
