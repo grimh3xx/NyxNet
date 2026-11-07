@@ -99,9 +99,9 @@ curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip
 proxychains4 -q nmap -sT -Pn example.com     # with socks5 127.0.0.1 9050 in proxychains.conf
 ```
 
-When NyxNet launches its own Tor the port is random, so either use the one on screen or run
-your system Tor (`sudo systemctl start tor`) and NyxNet will attach to it. For the system
-Tor, enable the ControlPort in `/etc/tor/torrc`:
+When NyxNet launches its own Tor it uses `127.0.0.1:9050` whenever that port is free (another
+one otherwise, shown on screen). To use the system Tor instead (`sudo systemctl start tor`),
+enable its ControlPort in `/etc/tor/torrc` and NyxNet will attach to it:
 
 ```text
 ControlPort 9051
@@ -110,6 +110,20 @@ CookieAuthentication 1
 
 and make sure your user can read the cookie (on most distros: add yourself to the
 `tor` / `debian-tor` group).
+
+### In a browser
+
+For browsing, **[Tor Browser](https://www.torproject.org/download/) is the right tool**: a normal
+browser behind a SOCKS proxy still leaks through fingerprinting and WebRTC. To see NyxNet's
+rotation in a regular Firefox anyway:
+
+1. Settings → Network Settings → **Manual proxy configuration**
+2. **SOCKS Host** `127.0.0.1`, **Port** `9050`, **SOCKS v5**
+3. Tick **Proxy DNS when using SOCKS v5**
+4. In `about:config`, set `media.peerconnection.enabled` to `false` (WebRTC leaks your real IP)
+
+Then open [check.torproject.org](https://check.torproject.org). Under WSL2, Windows browsers can
+reach the proxy on `127.0.0.1` too (localhost forwarding is on by default).
 
 ## How it works
 

@@ -23,10 +23,15 @@ CHECK_HOST = "check.torproject.org"
 REAL_IP_URL = "https://api.ipify.org"
 
 
-def free_port():
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+def free_port(preferred=0):
+    """`preferred` if it is free (so browsers can keep a fixed proxy setting), else any free port."""
+    for port in (preferred, 0) if preferred else (0,):
+        with socket.socket() as s:
+            try:
+                s.bind(("127.0.0.1", port))
+            except OSError:
+                continue
+            return s.getsockname()[1]
 
 
 def real_ip(timeout=10):
@@ -81,7 +86,7 @@ class TorBackend:
             raise TorError("the 'tor' binary was not found. Install it (e.g. `sudo pacman -S tor`, "
                            "`sudo apt install tor`, `brew install tor`) or point --tor-cmd at it")
         self.datadir = tempfile.mkdtemp(prefix="nyxnet-")
-        self.socks_port, self.control_port = free_port(), free_port()
+        self.socks_port, self.control_port = free_port(self.socks_port), free_port(self.control_port)
         self.on_status("starting a private Tor instance")
 
         last = []
