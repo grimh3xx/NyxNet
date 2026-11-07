@@ -90,14 +90,17 @@ class TorBackend:
         if self.launch != "always":
             # the requested ControlPort, then Tor Browser's (9151) when the default was left alone
             ports = [self.control_port] + ([TOR_BROWSER_CONTROL] if self.control_port == 9051 else [])
-            for i, port in enumerate(ports):
+            for port in ports:
                 try:
                     self._attach(port)
                     self.mode = "attached"
                     return
                 except TorError:
-                    if self.launch == "never" and i == len(ports) - 1:
-                        raise
+                    pass
+            if self.launch == "never":
+                tried = " and ".join(str(p) for p in ports)
+                raise TorError(f"no running Tor found (tried ControlPort {tried}); start Tor or Tor Browser, "
+                               "or drop --launch never to let NyxNet start one")
         self._launch()
         self.mode = "launched"
 

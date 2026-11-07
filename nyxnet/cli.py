@@ -133,8 +133,10 @@ def run_lines(args, backend, history, err):
 
 
 def main(argv=None):
-    if os.name == "nt" and not sys.stdout.isatty():
-        sys.stdout.reconfigure(encoding="utf-8")  # → and ✓ in --plain output piped to a file
+    if os.name == "nt":  # → ✓ · in output that is piped or redirected
+        for stream in (sys.stdout, sys.stderr):
+            if not stream.isatty():
+                stream.reconfigure(encoding="utf-8")
     args = parse_args(argv)
     if not args.demo and args.interval < NEWNYM_MIN:
         args.interval = NEWNYM_MIN
