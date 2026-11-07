@@ -10,7 +10,7 @@ and shows the full guard → middle → exit path, in real time.
 [![release](https://img.shields.io/github/v/release/grimh3xx/NyxNet?style=flat-square&labelColor=111826&color=3B82F6)](https://github.com/grimh3xx/NyxNet/releases/latest)
 [![license](https://img.shields.io/github/license/grimh3xx/NyxNet?style=flat-square&labelColor=111826&color=22D3EE)](LICENSE)
 ![python](https://img.shields.io/badge/python-3.9%2B-3B82F6?style=flat-square&labelColor=111826)
-![platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-22D3EE?style=flat-square&labelColor=111826)
+![platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-22D3EE?style=flat-square&labelColor=111826)
 
 `CentralTech Solutions` · [centraltechpc.com](https://centraltechpc.com) · [github.com/grimh3xx](https://github.com/grimh3xx)
 
@@ -22,8 +22,9 @@ and shows the full guard → middle → exit path, in real time.
 
 ## Features
 
-- **Zero setup.** If no Tor ControlPort is running, NyxNet starts its own private Tor instance
-  on random ports with a throwaway data directory. No root, no `torrc` edits, nothing left behind.
+- **Zero setup.** NyxNet attaches to a running Tor (system service or Tor Browser), or starts its
+  own private instance with a throwaway data directory. No root, no `torrc` edits, nothing left behind.
+- **Linux, macOS and Windows.** On Windows it ships as a single `.exe` and works with Tor Browser.
 - **Verified exits.** Every identity is checked through [check.torproject.org](https://check.torproject.org),
   so the dashboard tells you when traffic is *not* going through Tor instead of assuming it is.
 - **Full circuit view.** Guard, middle and exit relays with nickname, country and address,
@@ -49,6 +50,22 @@ brew install tor            # macOS
 pipx install git+https://github.com/grimh3xx/NyxNet
 nyxnet
 ```
+
+### Windows
+
+1. Install **Tor Browser** (`winget install TorProject.TorBrowser` or [torproject.org](https://www.torproject.org/download/)).
+2. Download **`nyxnet-windows-x64.exe`** from the [latest release](https://github.com/grimh3xx/NyxNet/releases/latest)
+   (a single file, no Python needed), or install it with `pipx install git+https://github.com/grimh3xx/NyxNet`.
+3. Run it in Windows Terminal:
+
+```powershell
+.\nyxnet-windows-x64.exe
+```
+
+With Tor Browser **open**, NyxNet attaches to it (ControlPort 9151, SocksPort 9150) and rotates
+the browser's identity. With Tor Browser **closed**, it finds Tor Browser's `tor.exe` and starts its own
+private instance on `127.0.0.1:9050`. A standalone Tor (Expert Bundle) works too: pass
+`--tor-cmd C:\path\to\tor.exe` or put it on `PATH`.
 
 Or from a clone:
 

@@ -91,7 +91,8 @@ def stats(h):
 def header(st):
     b = st.backend
     mode = {"demo": ("demo · simulated network", WARN), "launched": ("private Tor instance", OK),
-            "attached": (f"attached to ControlPort :{getattr(b, 'control_port', '')}", OK)}.get(b.mode, ("connecting", WARN))
+            "attached": ("attached to Tor Browser" if getattr(b, "control_port", 0) == 9151
+                         else f"attached to ControlPort :{getattr(b, 'control_port', '')}", OK)}.get(b.mode, ("connecting", WARN))
     info = _kv([
         ("", Text("Tor identity rotator", style=f"bold {TITLE}")),
         ("", Text(f"v{__version__} · CentralTech · github.com/grimh3xx", style=DIM)),

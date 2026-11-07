@@ -12,11 +12,12 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.12", "3.13"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,6 +30,26 @@ jobs:
         run: |
           nyxnet --version
           nyxnet --demo --plain -n 3 -i 0 --demo-speed 20
+
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q . pyinstaller
+      - name: Build nyxnet.exe
+        run: pyinstaller --onefile --console --name nyxnet-windows-x64 --collect-data stem packaging/nyxnet_entry.py
+      - name: Smoke test the exe
+        run: |
+          dist\nyxnet-windows-x64.exe --version
+          dist\nyxnet-windows-x64.exe --demo --plain -n 2 -i 0 --demo-speed 20
+        shell: cmd
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nyxnet-windows-x64
+          path: dist/nyxnet-windows-x64.exe
 
   package:
     runs-on: ubuntu-latest
@@ -45,7 +66,7 @@ jobs:
 
   release:
     if: github.event_name == 'push'
-    needs: [test, package]
+    needs: [test, package, windows-exe]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,6 +1,7 @@
 """Talks to Tor: attaches to a running instance through its ControlPort, or launches a
 private one (temporary data directory, random ports) so no torrc editing or root is needed.
 """
+import os
 import re
 import shutil
 import socket
@@ -8,12 +9,13 @@ import tempfile
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 
 import requests
 import stem
 import stem.process
 from stem import Signal
-from stem.control import Controller, EventType
+from stem.control import Controller, EventType, Listener
 from stem.response.events import StreamEvent
 
 from .model import Hop, Identity, TorError
@@ -21,6 +23,33 @@ from .model import Hop, Identity, TorError
 CHECK_URL = "https://check.torproject.org/api/ip"
 CHECK_HOST = "check.torproject.org"
 REAL_IP_URL = "https://api.ipify.org"
+
+
+TOR_BROWSER_CONTROL = 9151
+INSTALL_HINT = (
+    "Tor was not found. Windows: install Tor Browser (winget install TorProject.TorBrowser) and either "
+    "keep it open or let NyxNet use its tor.exe; or pass --tor-cmd PATH\\TO\\tor.exe. "
+    "Linux/macOS: sudo pacman -S tor · sudo apt install tor · brew install tor"
+    if os.name == "nt" else
+    "the 'tor' binary was not found. Install it (sudo pacman -S tor · sudo apt install tor · "
+    "brew install tor) or point --tor-cmd at it"
+)
+
+
+def find_tor(cmd="tor"):
+    """tor on PATH, or (Windows) the tor.exe shipped inside a Tor Browser install."""
+    hit = shutil.which(cmd)
+    if hit or os.name != "nt":
+        return hit
+    rel = Path("Browser") / "TorBrowser" / "Tor" / "tor.exe"
+    roots = [os.environ.get(v) for v in ("USERPROFILE", "LOCALAPPDATA", "ProgramFiles", "ProgramFiles(x86)")]
+    for root in filter(None, roots):
+        for base in (Path(root), Path(root) / "Desktop", Path(root) / "OneDrive" / "Desktop"):
+            for name in ("Tor Browser", "TorBrowser"):
+                exe = base / name / rel
+                if exe.is_file():
+                    return str(exe)
+    return None
 
 
 def free_port(preferred=0):
@@ -59,13 +88,16 @@ class TorBackend:
     # ------------------------------------------------------------- lifecycle
     def start(self):
         if self.launch != "always":
-            try:
-                self._attach(self.control_port)
-                self.mode = "attached"
-                return
-            except TorError:
-                if self.launch == "never":
-                    raise
+            # the requested ControlPort, then Tor Browser's (9151) when the default was left alone
+            ports = [self.control_port] + ([TOR_BROWSER_CONTROL] if self.control_port == 9051 else [])
+            for i, port in enumerate(ports):
+                try:
+                    self._attach(port)
+                    self.mode = "attached"
+                    return
+                except TorError:
+                    if self.launch == "never" and i == len(ports) - 1:
+                        raise
         self._launch()
         self.mode = "launched"
 
@@ -80,11 +112,19 @@ class TorBackend:
             c.close()
             raise TorError(f"ControlPort {port} refused authentication: {e}") from None
         self.controller = c
+        self.control_port = port
+        try:  # use the SocksPort this Tor really listens on (9050 system, 9150 Tor Browser, ...)
+            socks = [p for addr, p in c.get_listeners(Listener.SOCKS) if addr in ("127.0.0.1", "localhost", "::1")]
+            if socks:
+                self.socks_port = socks[0]
+        except (stem.ControllerError, ValueError):
+            pass
 
     def _launch(self):
-        if not shutil.which(self.tor_cmd):
-            raise TorError("the 'tor' binary was not found. Install it (e.g. `sudo pacman -S tor`, "
-                           "`sudo apt install tor`, `brew install tor`) or point --tor-cmd at it")
+        tor = find_tor(self.tor_cmd)
+        if not tor:
+            raise TorError(INSTALL_HINT)
+        self.tor_cmd = tor
         self.datadir = tempfile.mkdtemp(prefix="nyxnet-")
         self.socks_port, self.control_port = free_port(self.socks_port), free_port(self.control_port)
         self.on_status("starting a private Tor instance")
