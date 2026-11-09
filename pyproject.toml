@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://centraltechpc.com"
+Homepage = "https://github.com/grimh3xx"
 Repository = "https://github.com/grimh3xx/NyxNet"
 
 [project.scripts]

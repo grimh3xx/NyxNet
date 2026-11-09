@@ -11,7 +11,7 @@ from rich.text import Text
 from . import __version__
 from .model import country_name, mask_ip
 
-# CentralTech palette
+# grimh3xx palette
 ACCENT, ACCENT2 = "#3B82F6", "#22D3EE"
 TITLE, TEXT, MUTED, DIM, BORDER = "#F1F5FB", "#C5CFDD", "#8B98AD", "#5B6678", "#1E2A3D"
 OK, WARN, ERR = "#34D399", "#FBBF24", "#F87171"
@@ -95,7 +95,7 @@ def header(st):
                          else f"attached to ControlPort :{getattr(b, 'control_port', '')}", OK)}.get(b.mode, ("connecting", WARN))
     info = _kv([
         ("", Text("Tor identity rotator", style=f"bold {TITLE}")),
-        ("", Text(f"v{__version__} · CentralTech · github.com/grimh3xx", style=DIM)),
+        ("", Text(f"v{__version__} · github.com/grimh3xx", style=DIM)),
         ("", ""),
         ("mode", Text("● ", style=mode[1]) + Text(mode[0])),
         ("socks5", Text(b.socks, style=ACCENT2)),

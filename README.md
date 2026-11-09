@@ -12,7 +12,7 @@ and shows the full guard → middle → exit path, in real time.
 ![python](https://img.shields.io/badge/python-3.9%2B-3B82F6?style=flat-square&labelColor=111826)
 ![platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-22D3EE?style=flat-square&labelColor=111826)
 
-`CentralTech Solutions` · [centraltechpc.com](https://centraltechpc.com) · [github.com/grimh3xx](https://github.com/grimh3xx)
+`grimh3xx` · [github.com/grimh3xx](https://github.com/grimh3xx) · [github.com/grimh3xx](https://github.com/grimh3xx)
 
 </div>
 
@@ -174,4 +174,4 @@ services you access. You are responsible for how you use this tool.
 
 ## License
 
-[MIT](LICENSE) © grimh3xx · CentralTech
+[MIT](LICENSE) © grimh3xx
